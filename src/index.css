@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+.outline-text {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(245, 245, 245, 0.75);
+}
+
+.grid-lines {
+  background-size: 64px 64px, 64px 64px;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+}
+
+:root {
+  --spot-x: 50%;
+  --spot-y: 50%;
+}
+
+.spotlight {
+  background: radial-gradient(480px circle at var(--spot-x) var(--spot-y),
+      rgba(255, 255, 255, 0.12),
+      rgba(255, 255, 255, 0.0) 42%);
+}
+
+.noise {
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 2px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 2px);
+  mix-blend-mode: overlay;
+}
