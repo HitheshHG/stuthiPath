@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -12,9 +12,18 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Profile menu state
+  const [menuOpen, setMenuOpen] = useState(false);
+  const badgeRef = useRef(null);
+
+  // Guard: require a stored session; otherwise redirect to landing
   useEffect(() => {
     const stored = localStorage.getItem("stuthipath:user");
-    if (stored) setUser(JSON.parse(stored));
+    if (!stored) {
+      window.location.href = "/";
+      return;
+    }
+    setUser(JSON.parse(stored));
 
     async function fetchAll() {
       try {
@@ -39,6 +48,34 @@ function Dashboard() {
     fetchAll();
   }, []);
 
+  // Close menu on outside click / Esc
+  useEffect(() => {
+    const onDocClick = (e) => {
+      if (!badgeRef.current?.contains(e.target)) setMenuOpen(false);
+    };
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("click", onDocClick);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("click", onDocClick);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
+  const onLogout = async () => {
+    try {
+      // If using Supabase Auth, sign the user out of the SDK too
+      await supabase.auth?.signOut?.();
+    } catch (e) {
+      console.error("Supabase signOut failed:", e);
+    } finally {
+      localStorage.removeItem("stuthipath:user");
+      window.location.href = "/"; // redirect to landing
+    }
+  };
+
   const ShimmerCard = () => (
     <div className="bg-white/10 rounded-2xl p-6 shadow-glow border border-white/20 animate-pulse h-56" />
   );
@@ -47,20 +84,65 @@ function Dashboard() {
     <>
       <Header />
       <div className="min-h-screen bg-base-black text-base-white font-sans relative overflow-hidden p-6 max-w-7xl mx-auto">
-        {/* User badge */}
-        <div className="fixed top-6 right-6 flex items-center gap-3 bg-white/10 backdrop-blur-xl rounded-full px-4 py-2 shadow-glow border border-white/10 select-none pointer-events-none">
-          {user?.picture ? (
-            <img
-              src={user.picture}
-              alt={user.name}
-              className="w-10 h-10 rounded-full object-cover border-2 border-white"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-base-black font-bold">
-              ?
+        {/* User badge with dropdown */}
+        <div ref={badgeRef} className="fixed top-6 right-6 z-50">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            className="flex items-center gap-3 bg-white/10 backdrop-blur-xl rounded-full px-4 py-2 shadow-glow border border-white/10 hover:bg-white/15 transition"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen ? "true" : "false"}
+            title="Open profile menu"
+          >
+            {user?.picture ? (
+              <img
+                src={user.picture}
+                alt={user?.name || "User"}
+                className="w-10 h-10 rounded-full object-cover border-2 border-white"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-base-black font-bold">
+                ?
+              </div>
+            )}
+            <span className="text-sm font-semibold">{user?.name || "Guest"}</span>
+            <svg
+              className={`w-4 h-4 transition ${menuOpen ? "rotate-180" : ""}`}
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+
+          {menuOpen && (
+            <div
+              role="menu"
+              className="mt-2 w-64 rounded-xl border border-white/10 bg-white/10 backdrop-blur-xl shadow-glow text-sm overflow-hidden"
+            >
+              <div className="px-4 py-3 border-b border-white/10">
+                <p className="font-semibold">{user?.name || "Guest"}</p>
+                {user?.email ? (
+                  <p className="text-base-dim truncate">{user.email}</p>
+                ) : null}
+              </div>
+              <ul className="py-1">
+                <li>
+                  <button
+                      className="w-full text-left px-4 py-2 text-red-500 hover:text-red-400 hover:bg-red-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 transition"
+                    onClick={onLogout}
+                  >
+                    Logout
+                  </button>
+                </li>
+              </ul>
             </div>
           )}
-          <span className="text-sm font-semibold">{user?.name || "Guest"}</span>
         </div>
 
         {/* Hero header */}
@@ -129,8 +211,12 @@ function Dashboard() {
                       <p className="text-base-dim mb-4 line-clamp-3">{description}</p>
                       <div className="flex items-end justify-between">
                         <div className="flex items-baseline gap-3">
-                          <span className="text-lg font-semibold line-through text-base-dim">₹{price}</span>
-                          <span className="text-3xl font-extrabold text-white">₹{discountedPrice.toFixed(0)}</span>
+                          <span className="text-lg font-semibold line-through text-base-dim">
+                            ₹{price}
+                          </span>
+                          <span className="text-3xl font-extrabold text-white">
+                            ₹{discountedPrice.toFixed(0)}
+                          </span>
                         </div>
                         <button
                           className="rounded-xl bg-white text-black font-semibold px-4 py-2 hover:opacity-90 transition"

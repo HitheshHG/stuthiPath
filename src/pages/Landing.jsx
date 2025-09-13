@@ -1,27 +1,27 @@
-import { useEffect, useRef, useState } from "react"
-import { GoogleLogin } from "@react-oauth/google"
-import { jwtDecode } from "jwt-decode"
-import Header from "../components/Header"
-import Footer from "../components/Footer"
+import { useEffect, useRef, useState } from "react";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 function Landing() {
-  const [name, setName] = useState("")
-  const [status, setStatus] = useState("")
-  const wrapRef = useRef(null)
+  const [name, setName] = useState("");
+  const [status, setStatus] = useState("");
+  const wrapRef = useRef(null);
 
   useEffect(() => {
-    const el = wrapRef.current
-    if (!el) return
+    const el = wrapRef.current;
+    if (!el) return;
     const onMove = (e) => {
-      const rect = el.getBoundingClientRect()
-      const x = ((e.clientX - rect.left) / rect.width) * 100
-      const y = ((e.clientY - rect.top) / rect.height) * 100
-      el.style.setProperty("--spot-x", `${x}%`)
-      el.style.setProperty("--spot-y", `${y}%`)
-    }
-    el.addEventListener("pointermove", onMove)
-    return () => el.removeEventListener("pointermove", onMove)
-  }, [])
+      const rect = el.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      el.style.setProperty("--spot-x", `${x}%`);
+      el.style.setProperty("--spot-y", `${y}%`);
+    };
+    el.addEventListener("pointermove", onMove);
+    return () => el.removeEventListener("pointermove", onMove);
+  }, []);
 
   const saveAndGo = (profile) => {
     try {
@@ -31,34 +31,34 @@ function Landing() {
         picture: profile?.picture || "",
         sub: profile?.sub || "",
         ts: Date.now(),
-      }
-      localStorage.setItem("stuthipath:user", JSON.stringify(payload))
-      setStatus("Redirecting…")
-      window.location.href = "/dashboard"
+      };
+      localStorage.setItem("stuthipath:user", JSON.stringify(payload));
+      setStatus("Redirecting…");
+      window.location.href = "/dashboard";
     } catch (err) {
-      setStatus("Could not save session")
-      console.error(err)
+      setStatus("Could not save session");
+      console.error(err);
     }
-  }
+  };
 
   const onGoogleSuccess = (credentialResponse) => {
     try {
-      const decoded = jwtDecode(credentialResponse.credential)
-      saveAndGo(decoded)
+      const decoded = jwtDecode(credentialResponse.credential);
+      saveAndGo(decoded);
     } catch (e) {
-      console.error(e)
-      setStatus("Google token decode failed")
+      console.error(e);
+      setStatus("Google token decode failed");
     }
-  }
+  };
 
   const onContinue = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!name.trim()) {
-      setStatus(<p className="text-xs text-red-500">Please enter a valid name</p>)
-      return
+      setStatus(<p className="text-xs text-red-500">Please enter a valid name</p>);
+      return;
     }
-    saveAndGo({ name })
-  }
+    saveAndGo({ name });
+  };
 
   return (
     <div
@@ -82,7 +82,6 @@ function Landing() {
 
             <div className="grid md:grid-cols-2 gap-10 items-center">
               <div className="space-y-6">
-
                 <h2 className="text-4xl md:text-6xl leading-[1.05] tracking-tight text-base-white">
                   Elevate learning with and focus
                 </h2>
@@ -90,7 +89,8 @@ function Landing() {
                 <br />
 
                 <p className="text-base-dim text-sm md:text-base max-w-prose">
-                  StuthiPath is an online platform that brings the wisdom of the Vedas and Upanishads to life, making timeless knowledge accessible to students everywhere                </p>
+                  StuthiPath is an online platform that brings the wisdom of the Vedas and Upanishads to life, making timeless knowledge accessible to students everywhere
+                </p>
 
                 <ul className="text-base-dim text-sm space-y-2">
                   <li className="flex items-center gap-2">
@@ -175,7 +175,7 @@ function Landing() {
 
       <Footer />
     </div>
-  )
+  );
 }
 
-export default Landing
+export default Landing;
