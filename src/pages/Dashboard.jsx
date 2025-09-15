@@ -11,12 +11,8 @@ function Dashboard() {
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Profile menu state
   const [menuOpen, setMenuOpen] = useState(false);
   const badgeRef = useRef(null);
-
-  // Guard: require a stored session; otherwise redirect to landing
   useEffect(() => {
     const stored = localStorage.getItem("stuthipath:user");
     if (!stored) {
@@ -48,7 +44,6 @@ function Dashboard() {
     fetchAll();
   }, []);
 
-  // Close menu on outside click / Esc
   useEffect(() => {
     const onDocClick = (e) => {
       if (!badgeRef.current?.contains(e.target)) setMenuOpen(false);
@@ -66,13 +61,12 @@ function Dashboard() {
 
   const onLogout = async () => {
     try {
-      // If using Supabase Auth, sign the user out of the SDK too
       await supabase.auth?.signOut?.();
     } catch (e) {
       console.error("Supabase signOut failed:", e);
     } finally {
       localStorage.removeItem("stuthipath:user");
-      window.location.href = "/"; // redirect to landing
+      window.location.href = "/";
     }
   };
 
@@ -84,7 +78,6 @@ function Dashboard() {
     <>
       <Header />
       <div className="min-h-screen bg-base-black text-base-white font-sans relative overflow-hidden p-6 max-w-7xl mx-auto">
-        {/* User badge with dropdown */}
         <div ref={badgeRef} className="fixed top-6 right-6 z-50">
           <button
             type="button"
@@ -134,7 +127,7 @@ function Dashboard() {
               <ul className="py-1">
                 <li>
                   <button
-                      className="w-full text-left px-4 py-2 text-red-500 hover:text-red-400 hover:bg-red-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 transition"
+                    className="w-full text-left px-4 py-2 text-red-500 hover:text-red-400 hover:bg-red-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 transition"
                     onClick={onLogout}
                   >
                     Logout
@@ -145,7 +138,6 @@ function Dashboard() {
           )}
         </div>
 
-        {/* Hero header */}
         <section className="relative mb-16 overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl px-6 py-16 md:py-20 shadow-glow">
           <div className="absolute inset-0 bg-black/10 pointer-events-none" />
           <div className="pointer-events-none absolute -top-8 -left-4 select-none text-[11rem] leading-none text-black/20 font-serif font-bold rotate-[12deg] mix-blend-multiply">
@@ -169,7 +161,6 @@ function Dashboard() {
           <div className="mb-8 text-red-500 text-center font-semibold">{error}</div>
         )}
 
-        {/* Plans (hero-style cards) */}
         <section className="mb-16">
           <h2 className="text-3xl mb-6">Course Plans & Pricing</h2>
           {loading ? (
@@ -190,7 +181,6 @@ function Dashboard() {
                     className="group rounded-2xl overflow-hidden border border-white/15 bg-white/5 shadow-glow hover:bg-white/10 transition"
                     title={`Register for ${name}`}
                   >
-                    {/* Hero banner with overlay */}
                     <div className="relative h-40 w-full">
                       <img
                         src={banner}
@@ -205,8 +195,6 @@ function Dashboard() {
                         <h3 className="text-2xl font-bold leading-tight">{name}</h3>
                       </div>
                     </div>
-
-                    {/* Body */}
                     <div className="p-5">
                       <p className="text-base-dim mb-4 line-clamp-3">{description}</p>
                       <div className="flex items-end justify-between">

@@ -144,7 +144,6 @@ function About() {
         </div>
       </footer>
 
-      {/* Optional ambient layers if CSS exists for these classes */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 opacity-80" />
         <div className="absolute inset-0 opacity-30" />
