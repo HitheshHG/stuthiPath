@@ -1,156 +1,111 @@
-import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
-function About() {
-  const wrapRef = useRef(null);
-
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el) return;
-    const onMove = (e) => {
-      const rect = el.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      el.style.setProperty("--spot-x", `${x}%`);
-      el.style.setProperty("--spot-y", `${y}%`);
-    };
-    el.addEventListener("pointermove", onMove);
-    return () => el.removeEventListener("pointermove", onMove);
-  }, []);
-
+export default function About() {
   return (
-    <div
-      ref={wrapRef}
-      className="min-h-screen text-white bg-black relative overflow-hidden font-sans"
-    >
-      <header className="relative z-10">
-        <div className="mx-auto max-w-7xl px-6 py-6 flex items-center justify-between">
-          <h1 className="text-lg font-semibold tracking-tight">StuthiPath</h1>
-          <nav className="hidden md:flex items-center gap-6 text-sm text-neutral-400">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <Link to="/about" className="hover:text-white transition-colors">About</Link>
-          </nav>
-        </div>
-      </header>
+    <div className="relative min-h-screen bg-white text-gray-900 font-sans">
+      <div
+        className="absolute inset-0 pointer-events-none opacity-90"
+        style={{
+          background:
+            "radial-gradient(80rem 60rem at 85% 15%, rgba(99,102,241,0.08), transparent 60%), radial-gradient(60rem 40rem at 10% 85%, rgba(236,72,153,0.06), transparent 60%)",
+        }}
+      />
+      <div
+        className="absolute inset-0 pointer-events-none mix-blend-screen opacity-35"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 30%, rgba(99,102,241,0.10), transparent 55%)",
+        }}
+      />
 
-      <main className="relative z-10">
-        <section className="mx-auto max-w-7xl px-6 pt-10 pb-20 md:pt-16 md:pb-28">
-          <div className="relative rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 md:p-12 overflow-hidden">
-            <div className="grid md:grid-cols-2 gap-10 items-start">
-              <div className="space-y-6">
-                <h2 className="text-4xl md:text-6xl leading-[1.05] tracking-tight">
-                  <span className="opacity-90">About</span>{" "}
-                  <span className="opacity-100">StuthiPath</span>
-                </h2>
+      <Header />
 
-                <p className="text-neutral-300 text-sm md:text-base max-w-prose">
-                  StuthiPath is a learning platform inspired by the Vedas and Upanishads—bridging timeless śruti with modern study for focused, joyful mastery.
-                </p>
+      <main className="relative z-10 pb-28">
+        <section id="about" className="mx-auto max-w-5xl px-6 pt-16 md:pt-20 pb-16 text-center">
+          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight leading-tight bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 bg-clip-text text-transparent">
+            About StuthiPath
+          </h1>
+          <p className="mt-6 text-lg md:text-xl text-gray-600 leading-relaxed max-w-3xl mx-auto">
+            StuthiPath blends timeless Vedic wisdom with modern learning tools,
+            creating a serene space for students to explore, focus, and grow.
+          </p>
+        </section>
 
-                <p className="text-neutral-300 text-sm md:text-base max-w-prose">
-                  Guided by clarity, rigor, and community, the platform curates pathways from foundations to depth, honoring Sanātana Dharma while embracing contemporary pedagogy.
-                </p>
-              </div>
+        <section className="mx-auto max-w-6xl px-6 grid md:grid-cols-2 gap-8 md:gap-12 pb-12 md:pb-20">
+          <div className="rounded-3xl border border-indigo-300 bg-white/90 backdrop-blur-md p-8 shadow-[0_10px_30px_rgba(99,102,241,0.12)]">
+            <h2 className="text-2xl font-semibold mb-3 text-indigo-800">Our Mission</h2>
+            <p className="text-gray-700 leading-relaxed">
+              We aim to make the profound teachings of the Vedas and Upanishads
+              accessible to learners everywhere. By combining tradition and
+              technology, StuthiPath nurtures intellectual clarity and inner
+              balance.
+            </p>
+          </div>
+          <div className="rounded-3xl border border-indigo-300 bg-white/90 backdrop-blur-md p-8 shadow-[0_10px_30px_rgba(99,102,241,0.12)]">
+            <h2 className="text-2xl font-semibold mb-3 text-indigo-800">Our Vision</h2>
+            <p className="text-gray-700 leading-relaxed">
+              To cultivate a generation of learners who stay rooted in timeless
+              knowledge while embracing innovation — growing in wisdom, focus,
+              and harmony.
+            </p>
+          </div>
+        </section>
 
-              <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 md:p-7">
-                <div className="grid gap-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold">Our Mission</h3>
-                      <p className="text-neutral-300 text-sm mt-1">
-                        Make timeless knowledge accessible, structured, and actionable for students everywhere.
-                      </p>
-                    </div>
-                    <div className="size-8 rounded-lg bg-white/10 grid place-items-center">
-                      <span>✦</span>
-                    </div>
-                  </div>
-
-                  <div className="w-full h-px bg-white/10" />
-
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold">Lineage & Inspiration</h3>
-                      <p className="text-neutral-300 text-sm mt-1">
-                        Rooted in Vedas, Upanishads, and the living ethos of Sanātana Dharma, presented with modern clarity.
-                      </p>
-                    </div>
-                    <div className="size-8 rounded-lg bg-white/10 grid place-items-center">
-                      <span>ૐ</span>
-                    </div>
-                  </div>
-
-                  <div className="w-full h-px bg-white/10" />
-
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold">Approach</h3>
-                      <p className="text-neutral-300 text-sm mt-1">
-                        Cohesive tracks, guided practice, and peer learning—supported by clean design and mindful focus.
-                      </p>
-                    </div>
-                    <div className="size-8 rounded-lg bg-white/10 grid place-items-center">
-                      <span>→</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-10 grid md:grid-cols-3 gap-6">
+        <section className="px-6 py-16 md:py-20">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-center text-3xl md:text-4xl font-bold mb-10 md:mb-14">
+              Our Core Values
+            </h2>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
               {[
-                { k: "Śraddhā", d: "Discipline with devotion—steady effort toward understanding and practice." },
-                { k: "Adhyayana", d: "Deep study—text, context, and contemplation in harmony." },
-                { k: "Satsaṅga", d: "Community of seekers—learning together with humility and joy." },
-              ].map((it) => (
+                {
+                  title: "Wisdom",
+                  text: "Guided by the eternal teachings of the Vedas and Upanishads.",
+                },
+                {
+                  title: "Focus",
+                  text: "Helping students build clarity and discipline in their journey.",
+                },
+                {
+                  title: "Community",
+                  text: "A supportive network of learners sharing insights and growth.",
+                },
+              ].map((item) => (
                 <div
-                  key={it.k}
-                  className="group rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 transition"
+                  key={item.title}
+                  className="group rounded-2xl border border-indigo-300 bg-white/90 backdrop-blur-sm p-6 shadow-[0_10px_24px_rgba(99,102,241,0.10)] hover:bg-indigo-50 transition-colors"
                 >
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">{it.k}</h3>
-                    <div className="size-8 rounded-lg bg-white/10 grid place-items-center group-hover:bg-white/20 transition">
-                      <span>✺</span>
-                    </div>
-                  </div>
-                  <p className="text-neutral-300 text-sm mt-2">{it.d}</p>
+                  <h3 className="text-lg md:text-xl font-semibold mb-2 text-indigo-800 group-hover:text-pink-700 transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">{item.text}</p>
                 </div>
               ))}
             </div>
+          </div>
+        </section>
 
-            <div className="mt-10 flex flex-col md:flex-row items-center gap-4">
-              <Link
-                to="/programs"
-                className="rounded-xl bg-white text-black font-medium px-5 py-3 hover:opacity-90 active:opacity-80 transition"
-                title="Explore Programs"
-              >
-                Explore Programs
-              </Link>
-              <Link
-                to="/events"
-                className="rounded-xl bg-white/0 text-white font-medium px-5 py-3 border border-white/10 hover:border-white/30 transition"
-                title="View Events"
-              >
-                View Events
-              </Link>
-            </div>
+        <section className="py-16 md:py-24 px-6">
+          <div className="max-w-3xl mx-auto text-center rounded-3xl border border-indigo-300 bg-white/90 backdrop-blur-md p-10 md:p-12 shadow-[0_15px_40px_rgba(99,102,241,0.14)]">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Ready to Begin Your Journey?
+            </h2>
+            <p className="text-gray-700 mb-8">
+              Dive deeper into knowledge, focus your mind, and connect with a
+              vibrant community of seekers.
+            </p>
+            <a
+              href="/"
+              className="inline-block px-8 py-3 text-lg font-semibold bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 text-white rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition"
+            >
+              Explore StuthiPath
+            </a>
           </div>
         </section>
       </main>
 
-      <footer className="relative z-10 border-t border-white/10">
-        <div className="mx-auto max-w-7xl px-6 py-8 text-sm text-neutral-400">
-          © {new Date().getFullYear()} StuthiPath
-        </div>
-      </footer>
-
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 opacity-80" />
-        <div className="absolute inset-0 opacity-30" />
-        <div className="absolute inset-0 opacity-60" />
-      </div>
+      <Footer />
     </div>
   );
 }
-
-export default About;

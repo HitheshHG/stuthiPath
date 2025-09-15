@@ -1,18 +1,28 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabaseClient";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import img1 from "../public/images/cmp1.png";
 import img2 from "../public/images/cmp2.png";
 import img3 from "../public/images/cmp3.png";
+import img4 from "../public/images/cmp4.png";
+import img5 from "../public/images/cmp5.png";
+import img6 from "../public/images/cmp6.png";
 
-function Dashboard() {
+export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const badgeRef = useRef(null);
+
+  const menuChipRef = useRef(null);
+  const menuItemsRef = useRef(null);
+  const portalWrapRef = useRef(null);
+
   useEffect(() => {
     const stored = localStorage.getItem("stuthipath:user");
     if (!stored) {
@@ -20,81 +30,148 @@ function Dashboard() {
       return;
     }
     setUser(JSON.parse(stored));
-
-    async function fetchAll() {
+    const fetchPlans = async () => {
       try {
         setLoading(true);
         setError(null);
-
-        const { data: course_plans, error: e1 } = await supabase
+        const { data, error: e } = await supabase
           .from("course_plans")
           .select("*")
           .order("created_at", { ascending: true });
-
-        if (e1) throw e1;
-        setPlans(course_plans || []);
+        if (e) throw e;
+        setPlans(data || []);
       } catch (err) {
         console.error(err);
         setError("Failed to load data");
       } finally {
         setLoading(false);
       }
-    }
-
-    fetchAll();
+    };
+    fetchPlans();
   }, []);
 
   useEffect(() => {
-    const onDocClick = (e) => {
-      if (!badgeRef.current?.contains(e.target)) setMenuOpen(false);
+    const onDocMouseDown = (e) => {
+      if (!portalWrapRef.current?.contains(e.target)) setMenuOpen(false);
     };
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") setMenuOpen(false);
+    const onDocKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        menuChipRef.current?.focus();
+      }
     };
-    document.addEventListener("click", onDocClick);
-    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("keydown", onDocKeyDown);
     return () => {
-      document.removeEventListener("click", onDocClick);
-      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onDocKeyDown);
     };
   }, []);
 
-  const onLogout = async () => {
+  const onLogout = async (e) => {
+    if (e?.preventDefault) e.preventDefault();
     try {
-      await supabase.auth?.signOut?.();
-    } catch (e) {
-      console.error("Supabase signOut failed:", e);
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("signOut:", err);
     } finally {
       localStorage.removeItem("stuthipath:user");
       window.location.href = "/";
     }
   };
 
-  const ShimmerCard = () => (
-    <div className="bg-white/10 rounded-2xl p-6 shadow-glow border border-white/20 animate-pulse h-56" />
+  const avatarUrl =
+    user?.user_metadata?.avatar_url ||
+    user?.user_metadata?.picture ||
+    user?.picture ||
+    "";
+
+  const Shimmer = () => (
+    <div className="rounded-2xl p-6 h-56 bg-indigo-50 border border-indigo-200 animate-pulse" />
   );
 
-  return (
-    <>
-      <Header />
-      <div className="min-h-screen bg-base-black text-base-white font-sans relative overflow-hidden p-6 max-w-7xl mx-auto">
-        <div ref={badgeRef} className="fixed top-6 right-6 z-50">
-          <button
-            type="button"
-            onClick={() => setMenuOpen((v) => !v)}
-            className="flex items-center gap-3 bg-white/10 backdrop-blur-xl rounded-full px-4 py-2 shadow-glow border border-white/10 hover:bg-white/15 transition"
+  const banners = [img1, img2, img3, img4, img5, img6];
+
+  const openMenu = () => {
+    setMenuOpen(true);
+    requestAnimationFrame(() => {
+      const firstItem = menuItemsRef.current?.querySelector('[role="menuitem"]');
+      firstItem?.focus();
+    });
+  };
+
+  const closeMenu = () => {
+    setMenuOpen(false);
+    menuChipRef.current?.focus();
+  };
+
+  const onChipKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
+      e.preventDefault();
+      openMenu();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setMenuOpen(true);
+      requestAnimationFrame(() => {
+        const items = Array.from(
+          menuItemsRef.current?.querySelectorAll('[role="menuitem"]') || []
+        );
+        items[items.length - 1]?.focus();
+      });
+    }
+  };
+
+  const onMenuKeyDown = (e) => {
+    const items = Array.from(
+      menuItemsRef.current?.querySelectorAll('[role="menuitem"]') || []
+    );
+    const idx = items.indexOf(document.activeElement);
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      items[(idx + 1) % items.length]?.focus();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      items[(idx - 1 + items.length) % items.length]?.focus();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      items?.focus();
+    } else if (e.key === "End") {
+      e.preventDefault();
+      items[items.length - 1]?.focus();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      closeMenu();
+    } else if (e.key === "Tab") {
+      setMenuOpen(false);
+    }
+  };
+
+  const overlay =
+    typeof window !== "undefined"
+      ? createPortal(
+        <div
+          ref={portalWrapRef}
+          style={{ position: "fixed", top: "6rem", right: "1.5rem", zIndex: 2147483647, pointerEvents: "auto" }}
+        >
+          <div
+            ref={menuChipRef}
+            role="button"
+            tabIndex={0}
             aria-haspopup="menu"
-            aria-expanded={menuOpen ? "true" : "false"}
-            title="Open profile menu"
+            aria-expanded={menuOpen}
+            aria-controls="user-menu"
+            onClick={() => (menuOpen ? closeMenu() : openMenu())}
+            onKeyDown={onChipKeyDown}
+            className="flex items-center gap-3 bg-white rounded-full px-4 py-2 border border-indigo-300 shadow hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer select-none"
           >
-            {user?.picture ? (
+            {avatarUrl ? (
               <img
-                src={user.picture}
+                src={avatarUrl}
                 alt={user?.name || "User"}
-                className="w-10 h-10 rounded-full object-cover border-2 border-white"
+                className="w-10 h-10 rounded-full object-cover border-2 border-white shadow"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-base-black font-bold">
+              <div className="w-10 h-10 rounded-full bg-indigo-200 flex items-center justify-center text-gray-900 font-bold">
                 ?
               </div>
             )}
@@ -111,119 +188,148 @@ function Dashboard() {
                 clipRule="evenodd"
               />
             </svg>
-          </button>
+          </div>
 
           {menuOpen && (
-            <div
+            <nav
+              id="user-menu"
               role="menu"
-              className="mt-2 w-64 rounded-xl border border-white/10 bg-white/10 backdrop-blur-xl shadow-glow text-sm overflow-hidden"
+              aria-labelledby="user-menu-button"
+              ref={menuItemsRef}
+              onKeyDown={onMenuKeyDown}
+              className="mt-2 w-64 rounded-xl border border-indigo-200 bg-white shadow text-sm overflow-hidden focus:outline-none"
             >
-              <div className="px-4 py-3 border-b border-white/10">
-                <p className="font-semibold">{user?.name || "Guest"}</p>
+              <div className="px-4 py-3 border-b border-indigo-100">
+                <p className="font-semibold text-gray-900">{user?.name || "Guest"}</p>
                 {user?.email ? (
-                  <p className="text-base-dim truncate">{user.email}</p>
+                  <p className="text-gray-500 truncate">{user.email}</p>
                 ) : null}
               </div>
-              <ul className="py-1">
-                <li>
-                  <button
-                    className="w-full text-left px-4 py-2 text-red-500 hover:text-red-400 hover:bg-red-500/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 transition"
-                    onClick={onLogout}
-                  >
-                    Logout
-                  </button>
-                </li>
-              </ul>
-            </div>
+
+
+              <a
+                href="/"
+                role="menuitem"
+                tabIndex={-1}
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 transition focus:bg-red-50 focus:text-red-700 outline-none"
+              >
+                Logout
+              </a>
+            </nav>
           )}
-        </div>
+        </div>,
+        document.body
+      )
+      : null;
 
-        <section className="relative mb-16 overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl px-6 py-16 md:py-20 shadow-glow">
-          <div className="absolute inset-0 bg-black/10 pointer-events-none" />
-          <div className="pointer-events-none absolute -top-8 -left-4 select-none text-[11rem] leading-none text-black/20 font-serif font-bold rotate-[12deg] mix-blend-multiply">
-            ॐ
-          </div>
-          <div className="pointer-events-none absolute bottom-[-36px] right-4 select-none text-[8rem] leading-none text-black/25 font-serif font-bold -rotate-6 mix-blend-multiply">
-            वेद
-          </div>
-          <div className="pointer-events-none absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 select-none text-[6rem] leading-none text-black/15 font-serif font-bold rotate-12 mix-blend-multiply">
-            शान्तिः
-          </div>
-          <div className="relative z-10 max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-3">
-              StuthiPath Dashboard
-            </h1>
-            <p className="text-base-dim italic mb-1">Awaken Wisdom, Illuminate the Journey</p>
-          </div>
-        </section>
+  return (
+    <>
+      <Header />
+      {overlay}
 
-        {error && (
-          <div className="mb-8 text-red-500 text-center font-semibold">{error}</div>
-        )}
+      <div className="min-h-screen bg-white text-gray-900 font-sans relative overflow-hidden">
+        <div
+          className="absolute inset-0 pointer-events-none opacity-90 z-0"
+          style={{
+            background:
+              "radial-gradient(80rem 60rem at 85% 15%, rgba(99,102,241,0.08), transparent 60%), radial-gradient(60rem 40rem at 10% 85%, rgba(236,72,153,0.06), transparent 60%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 pointer-events-none mix-blend-screen opacity-35 z-0"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 30%, rgba(99,102,241,0.10), transparent 55%)",
+          }}
+        />
 
-        <section className="mb-16">
-          <h2 className="text-3xl mb-6">Course Plans & Pricing</h2>
-          {loading ? (
-            <div className="grid md:grid-cols-3 gap-8">
-              <ShimmerCard />
-              <ShimmerCard />
-              <ShimmerCard />
+        <div className="relative z-10 p-6 max-w-7xl mx-auto">
+          <section className="relative mb-12 overflow-hidden rounded-3xl border border-indigo-200 bg-white/90 backdrop-blur-md px-6 py-14 md:py-16 shadow-[0_15px_40px_rgba(99,102,241,0.14)]">
+            <div className="absolute -top-8 -left-4 text-[11rem] text-indigo-200 font-serif font-bold rotate-[12deg] select-none z-0">
+              ॐ
             </div>
-          ) : (
-            <div className="grid md:grid-cols-3 gap-8">
-              {plans.map(({ id, name, description, price, discount }, idx) => {
-                const discountedPrice = (price * (100 - discount)) / 100;
-                const banner = [img1, img2, img3][idx % 3];
+            <div className="absolute bottom-[-36px] right-4 text-[8rem] text-indigo-100 font-serif font-bold -rotate-6 select-none z-0">
+              वेद
+            </div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[6rem] text-indigo-100 font-serif font-bold rotate-12 select-none z-0">
+              शान्तिः
+            </div>
+            <div className="relative z-10 max-w-4xl mx-auto text-center">
+              <h1 className="text-5xl md:text-6xl font-extrabold mb-3 bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 bg-clip-text text-transparent">
+                StuthiPath Dashboard
+              </h1>
+              <p className="text-gray-600 italic">Awaken Wisdom, Illuminate the Journey</p>
+            </div>
+          </section>
 
-                return (
-                  <div
-                    key={id}
-                    className="group rounded-2xl overflow-hidden border border-white/15 bg-white/5 shadow-glow hover:bg-white/10 transition"
-                    title={`Register for ${name}`}
-                  >
-                    <div className="relative h-40 w-full">
-                      <img
-                        src={banner}
-                        alt={name}
-                        className="absolute inset-0 h-full w-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-                      <span className="absolute top-3 right-3 rounded-full bg-white text-black text-xs font-bold px-2 py-1 shadow">
-                        {discount}% OFF
-                      </span>
-                      <div className="absolute bottom-3 left-4 right-4">
-                        <h3 className="text-2xl font-bold leading-tight">{name}</h3>
-                      </div>
-                    </div>
-                    <div className="p-5">
-                      <p className="text-base-dim mb-4 line-clamp-3">{description}</p>
-                      <div className="flex items-end justify-between">
-                        <div className="flex items-baseline gap-3">
-                          <span className="text-lg font-semibold line-through text-base-dim">
-                            ₹{price}
-                          </span>
-                          <span className="text-3xl font-extrabold text-white">
-                            ₹{discountedPrice.toFixed(0)}
-                          </span>
+          {error && <div className="mb-8 text-red-600 text-center">{error}</div>}
+
+          <section className="mb-16">
+            <h2 className="text-3xl mb-6">Course Plans & Pricing</h2>
+            {loading ? (
+              <div className="grid md:grid-cols-3 gap-8">
+                <Shimmer />
+                <Shimmer />
+                <Shimmer />
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-3 gap-8">
+                {plans.map(({ id, name, description, price, discount }, idx) => {
+                  const discounted = (price * (100 - discount)) / 100;
+                  const banner = banners[idx % banners.length];
+                  return (
+                    <div
+                      key={id}
+                      className="group rounded-2xl overflow-hidden border border-indigo-200 bg-white/95 shadow-[0_10px_30px_rgba(99,102,241,0.12)] hover:bg-indigo-50 transition"
+                    >
+                      <div className="relative h-44 w-full">
+                        <img
+                          src={banner}
+                          alt={name}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/25 to-transparent" />
+                        <span className="absolute top-3 right-3 rounded-full bg-white text-gray-900 text-xs font-bold px-2 py-1 shadow">
+                          {discount}% OFF
+                        </span>
+                        <div className="absolute bottom-3 left-4 right-4">
+                          <h3 className="text-2xl font-bold text-white drop-shadow">{name}</h3>
                         </div>
-                        <button
-                          className="rounded-xl bg-white text-black font-semibold px-4 py-2 hover:opacity-90 transition"
-                          onClick={() => alert(`Register for ${name} coming soon!`)}
-                        >
-                          Register
-                        </button>
+                      </div>
+                      <div className="p-5">
+                        <p className="text-gray-600 mb-4 line-clamp-3">{description}</p>
+                        <div className="flex items-end justify-between">
+                          <div className="flex items-baseline gap-3">
+                            <span className="text-lg font-semibold line-through text-gray-400">
+                              ₹{price}
+                            </span>
+                            <span className="text-3xl font-extrabold text-gray-900">
+                              ₹{discounted.toFixed(0)}
+                            </span>
+                          </div>
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              alert(`Register for ${name} coming soon!`);
+                            }}
+                            className="rounded-xl bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 text-white font-semibold px-4 py-2 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition"
+                          >
+                            Register
+                          </a>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
+
       <Footer />
     </>
   );
 }
-
-export default Dashboard;
